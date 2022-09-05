@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<atlassian-plugin key="${atlassian.plugin.key}"
+                  name="${project.name}" plugins-version="2">
+  <plugin-info>
+    <description>${project.description}</description>
+    <version>${project.version}</version>
+    <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+    <param name="plugin-icon">images/pluginIcon.png</param>
+    <param name="plugin-logo">images/pluginLogo.png</param>
+  </plugin-info>
+  <!-- add our i18n resource -->
+  <resource type="i18n" name="i18n" location="i118n/${project.artifactId}"/>
+  <!-- add our web resources -->
+  <web-resource key="${atlassian.plugin.key}.resources"
+                i118n-name-key="${atlassian.plugin.key}.resources.name"
+                name="Confluence Rest Extension Web Resource">
+    <description key="${atlassian.plugin.key}.resources.description">
+      AUI plugin and png thumbnails</description>
+    <dependency>com.atlassian.auiplugin:ajs</dependency>
+    <resource type="download" name="conf-rest-extension.css"
+              location="/css/conf-rest-extension.css"/>
+    <resource type="download" name="conf-rest-extension.js"
+              location="/js/conf-rest-extension.js"/>
+    <resource type="download" name="images/" location="/images"/>
+    <context>${project.artifactId}</context>
+  </web-resource>
+
+  <rest name="Delete Attachment Controller" i18n-name-key="${atlassian.plugin.key}.rest.name"
+        key="${atlassian.plugin.key}.rest" path="/confrestextension" version="1.0">
+    <description key="${atlassian.plugin.key}.rest.description">
+      The Delete Attachment Controller Plugin</description>
+  </rest>
+</atlassian-plugin>
