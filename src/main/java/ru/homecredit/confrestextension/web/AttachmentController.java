@@ -41,16 +41,7 @@ public class AttachmentController {
         log.info("starting getAttachmentVersions() method");
         AttachmentResponse attachmentResponse =
                 attachmentService.getVersions(Long.parseLong(attachmentId));
-        Map<String, Object> response = new HashMap<>();
-        if (attachmentResponse == null) {
-            response.put("result", "error");
-            response.put("errorText", "attachment with id " + attachmentId +
-                    " was not found");
-        } else {
-            response.put("result", "found");
-            response.put("attachmentInfo", attachmentResponse);
-        }
-        return Response.ok(gson.toJson(response)).build();
+        return Response.ok(gson.toJson(attachmentResponse)).build();
     }
 
     @DELETE
@@ -63,17 +54,6 @@ public class AttachmentController {
         AttachmentResponse attachmentResponse =
                 attachmentService.deleteVersion(Long.parseLong(attachmentId),
                                                 Integer.parseInt(versionId));
-        Map<String, Object> response = new HashMap<>();
-        log.info("constructing response");
-        if ((attachmentResponse == null) ||
-                !attachmentResponse.getVersions().containsKey(Integer.parseInt(versionId))) {
-            response.put("result", "error");
-            response.put("errorText", "attachment with id " + attachmentId +
-                    " and version " + versionId + " was not found");
-        } else {
-            response.put("result", "deleted");
-            response.put("attachmentInfo", attachmentResponse);
-        }
-        return Response.ok(gson.toJson(response)).build();
+        return Response.ok(attachmentResponse).build();
     }
 }

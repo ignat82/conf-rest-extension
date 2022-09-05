@@ -9,6 +9,9 @@ import ru.homecredit.confrestextension.response.AttachmentResponse.Version;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import static ru.homecredit.confrestextension.response.AttachmentResponse.Result.*;
 
 @Slf4j
 public class AttachmentService {
@@ -21,59 +24,74 @@ public class AttachmentService {
 
     public AttachmentResponse getVersions(long attachmentId) {
         log.info("starting getVersions() method");
+        AttachmentResponse attachmentResponse = new AttachmentResponse();
+        Attachment attachment;
         try {
-            Attachment attachment = attachmentManager.getAttachment(attachmentId);
-            if (attachment == null) {
-                log.error("getting attachment fail loose massage. Returning null " +
-                                  "attachmentResponse");
-                return null;
+            attachment = attachmentManager.getAttachment(attachmentId);
+            attachmentResponse = new AttachmentResponse(attachment);
+        } catch (Exception e) {
+            log.error("caught exception when acquiring attachment {} by Id", attachmentId);
+            attachmentResponse.setResult(ERROR);
+            attachmentResponse.setAttachmentId(attachmentId);
+            attachmentResponse.setMessage("exception " +
+                " caught when trying to acquire attachment with Id "
+                                                  + attachmentId + " " + e.getMessage());
+            return attachmentResponse;
+        }
+        log.info("acquired attachment {}", attachmentId);
+        List<Attachment> allAttachmentVersions;
+        try {
+            allAttachmentVersions = attachmentManager
+                    .getAllVersions(attachment);
+            log.info("got attachments list {}", allAttachmentVersions.toString());
+            Map<Integer, Version> versions = new HashMap<>();
+            for (Attachment attachmentVersion : allAttachmentVersions) {
+                versions.put(attachmentVersion.getVersion(), new Version(attachmentVersion));
             }
-            AttachmentResponse attachmentResponse = new AttachmentResponse(attachment);
-            updateVersions(attachmentResponse);
+            attachmentResponse.setVersions(versions);
+            attachmentResponse.setResult(SUCCESS);
             return attachmentResponse;
         } catch (Exception e) {
-            log.error("getting attachment fail good massage. Returning null attachmentResponse");
-            return null;
+            log.error("caught exception when acquiring attachment {} versions", attachmentId);
+            attachmentResponse.setResult(ERROR);
+            attachmentResponse.setMessage("exception " + e.getMessage() +
+                 "caught when trying to acquire attachment's " + attachmentId + " versions");
+            return attachmentResponse;
         }
-
-    }
-
-    public void updateVersions(AttachmentResponse attachmentResponse) {
-        log.info("starting updateVersions() method");
-        List<Attachment> allAttachmentVersions = attachmentManager
-                .getAllVersions(attachmentManager.getAttachment(attachmentResponse.getAttachmentId()));
-        log.info("got attachments list {}",allAttachmentVersions.toString());
-        Map<Integer, Version> versions = new HashMap<>();
-        for (Attachment attachmentVersion : allAttachmentVersions) {
-            log.info("going with attachment {}", attachmentVersion);
-            try {
-                attachmentVersion.getVersion();
-            } catch (Exception e) {
-                log.error("caught {} exception when getting version number", e.getMessage());
-            }
-            versions.put(attachmentVersion.getVersion(), new Version(attachmentVersion));
-        }
-        log.info("versions assembled");
-        attachmentResponse.setVersions(versions);
     }
 
     public AttachmentResponse deleteVersion(long attachmentId, int versionId) {
         log.info("starting deleteVersion() method");
         AttachmentResponse attachmentResponse = getVersions(attachmentId);
-        log.info("attachment response constructed and is null - {}", attachmentResponse == null);
-        try {
-            long attachmentToDeleteId =
-                    attachmentResponse.getVersions().get(versionId).getAttachmentId();
-            log.info("attachmentToDeleteId is {}", attachmentToDeleteId);
-            Attachment attachmentToDelete = attachmentManager.getAttachment(attachmentToDeleteId);
-            log.info("attachmentToDelete constructed");
-            attachmentManager.removeAttachmentVersionFromServer(attachmentToDelete);
-            log.info("attachmentToDelete removed");
-            updateVersions(attachmentResponse);
-        } catch (NullPointerException npe) {
-            log.error("version {} isn't exist", versionId);
+        if (attachmentResponse.getResult() == ERROR) {
+            log.info("failed to get attachment versions");
+            return attachmentResponse;
         }
-        log.info("attachmentResponse is null - {}", attachmentResponse==null);
+        if (!attachmentResponse.getVersions().containsKey(versionId)) {
+            log.error("version {} of attachment {} isn't exist", versionId, attachmentId);
+            attachmentResponse.setResult(ERROR);
+            attachmentResponse.setMessage("version " + versionId + " does not exist");
+            return attachmentResponse;
+        }
+        log.info("attachment to be deleted version is {} from {}", versionId,
+                 attachmentResponse.getVersions().size());
+        Attachment attachment = attachmentManager.getAttachment(attachmentId);
+        if ((attachmentResponse.getVersions().size() == 1)
+                && Objects.equals(attachment.getContainer().getType(), "page")) {
+            log.info("last attachment on page. skipping");
+            attachmentResponse.setResult(ERROR);
+            attachmentResponse.setMessage("was last version...");
+            log.info("container is " + attachment.getContainer().getType());
+            attachmentManager.removeAttachmentVersionFromServer(attachmentManager.getAttachment(attachmentId));
+            return attachmentResponse;
+        }
+        long attachmentToRemoveId =
+                attachmentResponse.getVersions().get(versionId).getAttachmentId();
+        attachmentManager.removeAttachmentVersionFromServer(attachmentManager.getAttachment(attachmentToRemoveId));
+        attachmentResponse.setMessage("version " + versionId + " of attachment "
+                                              + attachmentToRemoveId + " of parent " +
+                                              "attachment " + attachmentId + " removed");
+        log.info("attachmentToDelete removed");
         return attachmentResponse;
     }
 

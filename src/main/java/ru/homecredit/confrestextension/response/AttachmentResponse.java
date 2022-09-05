@@ -1,8 +1,11 @@
 package ru.homecredit.confrestextension.response;
 
 import com.atlassian.confluence.pages.Attachment;
+import com.google.gson.annotations.SerializedName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.xml.bind.annotation.*;
@@ -12,7 +15,15 @@ import java.util.Map;
 @XmlAccessorType(XmlAccessType.FIELD)
 @Slf4j
 @Data
+@NoArgsConstructor
 public class AttachmentResponse {
+
+    @AllArgsConstructor
+    @Getter
+    public enum Result {
+        @SerializedName("success") SUCCESS,
+        @SerializedName("error") ERROR;
+    }
 
     @Getter
     public static class Version {
@@ -26,7 +37,6 @@ public class AttachmentResponse {
         private long attachmentId;
 
         public Version(Attachment attachment) {
-            log.info("starting Version instance construction");
             versionNumb = attachment.getVersion();
             creationDate = attachment.getCreationDate().toString();
             creator = attachment.getCreator().getName();
@@ -34,6 +44,10 @@ public class AttachmentResponse {
         }
     }
 
+    @XmlElement(name = "result")
+    private Result result;
+    @XmlElement(name = "message")
+    private String message;
     @XmlElement(name = "attachmentId")
     private long attachmentId;
     @XmlElement(name = "fileName")
@@ -42,20 +56,9 @@ public class AttachmentResponse {
     @XmlElement(name = "version")
     private Map<Integer, Version> versions;
 
-
     public AttachmentResponse(Attachment attachment) {
-        log.warn("AttachmentResponse instance construction");
         attachmentId = attachment.getId();
         fileName = attachment.getFileName();
     }
 
-    public void setVersions(Map<Integer, Version> versions) {
-        log.info("running setVersions() method");
-        this.versions = versions;
-    }
-
-    public Map<Integer, Version> getVersions(Map<Integer, Version> versions) {
-        log.info("running getVersions() method");
-        return versions;
-    }
 }
