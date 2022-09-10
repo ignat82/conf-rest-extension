@@ -18,8 +18,6 @@ import java.util.Map;
 @NoArgsConstructor
 public class AttachmentResponse {
 
-    @AllArgsConstructor
-    @Getter
     public enum Result {
         @SerializedName("success") SUCCESS,
         @SerializedName("error") ERROR;

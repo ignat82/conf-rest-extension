@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import ru.homecredit.confrestextension.response.AttachmentResponse;
 import ru.homecredit.confrestextension.response.AttachmentResponse.Version;
 
+import javax.inject.Named;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.Objects;
 import static ru.homecredit.confrestextension.response.AttachmentResponse.Result.*;
 
 @Slf4j
+@Named
 public class AttachmentService {
     private final AttachmentManager attachmentManager;
 
@@ -31,8 +33,8 @@ public class AttachmentService {
             attachmentResponse = new AttachmentResponse(attachment);
         } catch (Exception e) {
             log.error("caught exception when acquiring attachment {} by Id", attachmentId);
-            attachmentResponse.setResult(ERROR);
             attachmentResponse.setAttachmentId(attachmentId);
+            attachmentResponse.setResult(ERROR);
             attachmentResponse.setMessage("exception " +
                 " caught when trying to acquire attachment with Id "
                                                   + attachmentId + " " + e.getMessage());
@@ -50,6 +52,8 @@ public class AttachmentService {
             }
             attachmentResponse.setVersions(versions);
             attachmentResponse.setResult(SUCCESS);
+            attachmentResponse.setMessage("got " + attachmentResponse.getVersions().size() +
+                                                  " attachments");
             return attachmentResponse;
         } catch (Exception e) {
             log.error("caught exception when acquiring attachment {} versions", attachmentId);
@@ -75,19 +79,10 @@ public class AttachmentService {
         }
         log.info("attachment to be deleted version is {} from {}", versionId,
                  attachmentResponse.getVersions().size());
-        Attachment attachment = attachmentManager.getAttachment(attachmentId);
-        if ((attachmentResponse.getVersions().size() == 1)
-                && Objects.equals(attachment.getContainer().getType(), "page")) {
-            log.info("last attachment on page. skipping");
-            attachmentResponse.setResult(ERROR);
-            attachmentResponse.setMessage("was last version...");
-            log.info("container is " + attachment.getContainer().getType());
-            attachmentManager.removeAttachmentVersionFromServer(attachmentManager.getAttachment(attachmentId));
-            return attachmentResponse;
-        }
         long attachmentToRemoveId =
                 attachmentResponse.getVersions().get(versionId).getAttachmentId();
         attachmentManager.removeAttachmentVersionFromServer(attachmentManager.getAttachment(attachmentToRemoveId));
+        attachmentResponse.setResult(SUCCESS);
         attachmentResponse.setMessage("version " + versionId + " of attachment "
                                               + attachmentToRemoveId + " of parent " +
                                               "attachment " + attachmentId + " removed");
@@ -95,4 +90,7 @@ public class AttachmentService {
         return attachmentResponse;
     }
 
+    public Attachment getAttachment(long attachmentId) throws Exception {
+        return attachmentManager.getAttachment(attachmentId);
+    }
 }
