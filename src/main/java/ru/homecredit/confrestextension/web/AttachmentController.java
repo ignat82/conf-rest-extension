@@ -3,6 +3,7 @@ package ru.homecredit.confrestextension.web;
 import com.atlassian.confluence.core.ContentPermissionManager;
 import com.atlassian.confluence.pages.AttachmentManager;
 import com.atlassian.confluence.security.SpacePermissionManager;
+import com.atlassian.confluence.spaces.actions.SpaceEditStylesheetAction;
 import com.atlassian.confluence.user.UserAccessor;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.user.UserManager;
@@ -13,6 +14,11 @@ import ru.homecredit.confrestextension.response.AttachmentResponse;
 import ru.homecredit.confrestextension.service.AttachmentService;
 import ru.homecredit.confrestextension.service.PermissionService;
 
+import javax.inject.Named;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -22,6 +28,8 @@ import javax.ws.rs.core.Response;
 
 import static ru.homecredit.confrestextension.response.AttachmentResponse.Result.ERROR;
 import static ru.homecredit.confrestextension.response.AttachmentResponse.Result.SUCCESS;
+import static ru.homecredit.confrestextension.service.PermissionService.ContentPermissionLevel.*;
+import static ru.homecredit.confrestextension.service.PermissionService.SpacePermissionLevel.*;
 
 /**
  * A resource of message.
@@ -57,10 +65,12 @@ public class AttachmentController {
         AttachmentResponse attachmentResponse =
         attachmentService.getVersions(Long.parseLong(attachmentId));
         if (attachmentResponse.getResult().equals(SUCCESS) &&
-                !permissionService.hasPermission(Long.parseLong(attachmentId))) {
+                !permissionService.hasPermission(Long.parseLong(attachmentId),
+                                                 VIEWATTACHMENT,
+                                                 View)) {
             log.error("permission denied");
             attachmentResponse.setResult(ERROR);
-            attachmentResponse.setMessage("user {} is not admin and not authorized to delete this" +
+            attachmentResponse.setMessage("user is not admin and not authorized to view this" +
                                      " attachment");
             attachmentResponse.setVersions(null);
         }
@@ -76,7 +86,8 @@ public class AttachmentController {
         AttachmentResponse attachmentResponse =
                 attachmentService.getVersions(Long.parseLong(attachmentId));
         if (attachmentResponse.getResult() == SUCCESS) {
-            if (!permissionService.hasPermission(Long.parseLong(attachmentId))) {
+            if (!permissionService.hasPermission(Long.parseLong(attachmentId), REMOVEATTACHMENT,
+                                                 Edit)) {
                 attachmentResponse.setResult(ERROR);
                 attachmentResponse.setMessage("nor the user is an admin and is not authorized to " +
                                                       "delete this attachment either");
