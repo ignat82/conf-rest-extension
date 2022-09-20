@@ -2,45 +2,18 @@ package ru.homecredit.confrestextension.response;
 
 import com.atlassian.confluence.pages.Attachment;
 import com.google.gson.annotations.SerializedName;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.*;
 
 import javax.xml.bind.annotation.*;
 import java.util.Map;
 
 @XmlRootElement(name = "message")
 @XmlAccessorType(XmlAccessType.FIELD)
-@Slf4j
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class AttachmentResponse {
 
-    public enum Result {
-        @SerializedName("success") SUCCESS,
-        @SerializedName("error") ERROR;
-    }
-
-    @Getter
-    public static class Version {
-        @XmlElement(name = "versionNumb")
-        private int versionNumb;
-        @XmlElement(name = "creationDate")
-        private String creationDate;
-        @XmlElement(name = "creator")
-        private String creator;
-        @XmlElement(name = "attachmentId")
-        private long attachmentId;
-
-        public Version(Attachment attachment) {
-            versionNumb = attachment.getVersion();
-            creationDate = attachment.getCreationDate().toString();
-            creator = attachment.getCreator().getName();
-            attachmentId = attachment.getId();
-        }
-    }
 
     @XmlElement(name = "result")
     private Result result;
@@ -54,9 +27,34 @@ public class AttachmentResponse {
     @XmlElement(name = "version")
     private Map<Integer, Version> versions;
 
-    public AttachmentResponse(Attachment attachment) {
-        attachmentId = attachment.getId();
-        fileName = attachment.getFileName();
+    public static AttachmentResponse from(Attachment attachment) {
+        AttachmentResponse attachmentResponse = new AttachmentResponse();
+        attachmentResponse.setAttachmentId(attachment.getId());
+        attachmentResponse.setFileName(attachment.getFileName());
+        return attachmentResponse;
     }
 
+    public enum Result {
+        @SerializedName("success") SUCCESS,
+        @SerializedName("error") ERROR;
+    }
+
+    @Getter
+    public static class Version {
+        @XmlElement(name = "versionNumb")
+        private final int versionNumb;
+        @XmlElement(name = "creationDate")
+        private final String creationDate;
+        @XmlElement(name = "creator")
+        private final String creator;
+        @XmlElement(name = "attachmentId")
+        private final long attachmentId;
+
+        public Version(Attachment attachment) {
+            versionNumb = attachment.getVersion();
+            creationDate = attachment.getCreationDate().toString();
+            creator = attachment.getCreator().getName();
+            attachmentId = attachment.getId();
+        }
+    }
 }
