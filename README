@@ -15,4 +15,4 @@ http://{host}//confluence/rest/confrestextension/1.0/attachment/{attachmentId}/d
 
 rest call requires basic auth to check if the user has permission to edit or remove
 certain attachment in given space (or he just happens to be a confluence administrator
-which your technical user for firing request certainly shouldn't)
+which your technical account for firing requests to that api probably shouldn't)

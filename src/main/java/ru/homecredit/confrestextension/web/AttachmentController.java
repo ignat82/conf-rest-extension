@@ -10,8 +10,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import ru.homecredit.confrestextension.response.AttachmentResponse;
-import ru.homecredit.confrestextension.service.AttachmentService;
-import ru.homecredit.confrestextension.service.PermissionService;
+import ru.homecredit.confrestextension.service.AttachmentServiceImpl;
+import ru.homecredit.confrestextension.service.PermissionServiceImpl;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -30,8 +30,8 @@ import static ru.homecredit.confrestextension.service.PermissionService.SpacePer
 @Named
 @Slf4j
 public class AttachmentController {
-    private final AttachmentService attachmentService;
-    private final PermissionService permissionService;
+    private final AttachmentServiceImpl attachmentService;
+    private final PermissionServiceImpl permissionService;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     @Inject
@@ -40,12 +40,12 @@ public class AttachmentController {
                                 @ComponentImport SpacePermissionManager spacePermissionManager,
                                 @ComponentImport UserAccessor userAccessor,
                                 @ComponentImport ContentPermissionManager contentPermissionManager) {
-        attachmentService = new AttachmentService(attachmentManager);
-        permissionService = new PermissionService(attachmentManager,
-                                                  contentPermissionManager,
-                                                  spacePermissionManager,
-                                                  userAccessor,
-                                                  userManager);
+        attachmentService = new AttachmentServiceImpl(attachmentManager);
+        permissionService = new PermissionServiceImpl(attachmentManager,
+                                                      contentPermissionManager,
+                                                      spacePermissionManager,
+                                                      userAccessor,
+                                                      userManager);
     }
 
     @GET
