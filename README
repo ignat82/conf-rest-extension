@@ -3,7 +3,7 @@ Confluence REST Extension Plugin to delete specific versions of attachments
 The function of this plugin is to provide REST service for:
  - GET all the versions of given attachment
  - DELETE given version of attachment
- - DELETE all versions of given attachment
+
 
 REST API endpoints:
 
@@ -11,7 +11,8 @@ for GET
 http://{host}/confluence/rest/confrestextension/1.0/attachment/{attachmentId}/getversions
 
 for DELETE:
-http://{host}//confluence/rest/confrestextension/1.0/attachment/{attachmentId}/deleteversion/3
+http://{host}//confluence/rest/confrestextension/1
+.0/attachment/{attachmentId}/deleteversion/{version numb}
 
 rest call requires basic auth to check if the user has permission to edit or remove
 certain attachment in given space (or he just happens to be a confluence administrator
