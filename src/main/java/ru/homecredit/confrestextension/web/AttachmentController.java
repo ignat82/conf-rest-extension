@@ -10,7 +10,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import ru.homecredit.confrestextension.response.AttachmentResponse;
+import ru.homecredit.confrestextension.service.AttachmentService;
 import ru.homecredit.confrestextension.service.AttachmentServiceImpl;
+import ru.homecredit.confrestextension.service.PermissionService;
 import ru.homecredit.confrestextension.service.PermissionServiceImpl;
 
 import javax.inject.Inject;
@@ -30,8 +32,8 @@ import static ru.homecredit.confrestextension.service.PermissionService.SpacePer
 @Named
 @Slf4j
 public class AttachmentController {
-    private final AttachmentServiceImpl attachmentService;
-    private final PermissionServiceImpl permissionService;
+    private final AttachmentService attachmentService;
+    private final PermissionService permissionService;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     @Inject
