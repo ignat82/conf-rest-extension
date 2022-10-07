@@ -6,16 +6,19 @@ import com.atlassian.confluence.pages.AttachmentManager;
 import com.atlassian.confluence.security.SpacePermissionManager;
 import com.atlassian.confluence.spaces.Space;
 import com.atlassian.confluence.user.UserAccessor;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.user.UserManager;
 import com.atlassian.user.Group;
 import com.atlassian.user.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.Map;
 
 @Slf4j
-@RequiredArgsConstructor
+@Named
 public class PermissionServiceImpl implements PermissionService{
     private final AttachmentManager attachmentManager;
     private final ContentPermissionManager contentPermissionManager;
@@ -23,6 +26,18 @@ public class PermissionServiceImpl implements PermissionService{
     private final UserAccessor userAccessor;
     private final UserManager userManager;
 
+    @Inject
+    public PermissionServiceImpl(@ComponentImport AttachmentManager attachmentManager,
+                                 @ComponentImport ContentPermissionManager contentPermissionManager,
+                                 @ComponentImport SpacePermissionManager spacePermissionManager,
+                                 @ComponentImport UserAccessor userAccessor,
+                                 @ComponentImport UserManager userManager) {
+        this.attachmentManager = attachmentManager;
+        this.contentPermissionManager = contentPermissionManager;
+        this.spacePermissionManager = spacePermissionManager;
+        this.userAccessor = userAccessor;
+        this.userManager = userManager;
+    }
     public boolean hasPermission(long attachmentId,
                                  SpacePermissionLevel spacePermissionLevel,
                                  ContentPermissionLevel contentPermissionLevel) {
@@ -59,14 +74,13 @@ public class PermissionServiceImpl implements PermissionService{
                      attachment.getFileName(),
                      attachment.getContainer());
             return true;
-        } else {
-            log.error("user \"{}\" has no content-level \"{}\" permission for attachment {} on page {}",
-                      user.getName(),
-                      contentPermissionLevel,
-                      attachment.getFileName(),
-                      attachment.getContainer());
-            return false;
         }
+        log.error("user \"{}\" has no content-level \"{}\" permission for attachment {} on page {}",
+                  user.getName(),
+                  contentPermissionLevel,
+                  attachment.getFileName(),
+                  attachment.getContainer());
+        return false;
     }
     private boolean hasSpaceLevelPermission(SpacePermissionLevel spacePermissionLevel,
                                             Space space, User user) {

@@ -8,6 +8,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.user.UserManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.homecredit.confrestextension.response.AttachmentResponse;
 import ru.homecredit.confrestextension.service.AttachmentService;
@@ -33,21 +34,11 @@ import static ru.homecredit.confrestextension.service.PermissionService.SpacePer
 @Slf4j
 public class AttachmentController {
     private final AttachmentService attachmentService;
-    private final PermissionService permissionService;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     @Inject
-    public AttachmentController(@ComponentImport AttachmentManager attachmentManager,
-                                @ComponentImport UserManager userManager,
-                                @ComponentImport SpacePermissionManager spacePermissionManager,
-                                @ComponentImport UserAccessor userAccessor,
-                                @ComponentImport ContentPermissionManager contentPermissionManager) {
-        attachmentService = new AttachmentServiceImpl(attachmentManager);
-        permissionService = new PermissionServiceImpl(attachmentManager,
-                                                      contentPermissionManager,
-                                                      spacePermissionManager,
-                                                      userAccessor,
-                                                      userManager);
+    public AttachmentController(AttachmentServiceImpl attachmentService) {
+        this.attachmentService = attachmentService;
     }
 
     @GET
@@ -55,18 +46,7 @@ public class AttachmentController {
     @Path("/{attachmentId}/getversions")
     public Response getAttachmentVersions(@PathParam("attachmentId") String attachmentId) {
         log.info("starting getAttachmentVersions() method");
-        AttachmentResponse attachmentResponse =
-            attachmentService.getVersions(Long.parseLong(attachmentId));
-        if (attachmentResponse.getResult().equals(SUCCESS) &&
-                !permissionService.hasPermission(
-                        Long.parseLong(attachmentId), VIEWATTACHMENT, View)) {
-            log.error("permission denied");
-            attachmentResponse.setResult(ERROR);
-            attachmentResponse.setMessage(
-                    "the user is is not authorized to view this attachment");
-            attachmentResponse.setVersions(null);
-        }
-        return Response.ok(gson.toJson(attachmentResponse)).build();
+        return Response.ok(gson.toJson(attachmentService.getVersions(Long.parseLong(attachmentId)))).build();
     }
 
     @DELETE
@@ -75,23 +55,7 @@ public class AttachmentController {
     public Response deleteVersion(@PathParam("attachmentId") String attachmentId,
                                   @PathParam("versionId") String versionId) {
         log.info("starting deleteVersion() method");
-        AttachmentResponse attachmentResponse =
-                attachmentService.getVersions(Long.parseLong(attachmentId));
-        if (attachmentResponse.getResult() == SUCCESS) {
-            boolean userHasPermission =
-                    permissionService.hasPermission(Long.parseLong(attachmentId),
-                                                    REMOVEATTACHMENT,
-                                                    Edit);
-            if (!userHasPermission) {
-                attachmentResponse.setResult(ERROR);
-                attachmentResponse.setMessage(
-                        "the user is is not authorized to delete this attachment");
-                attachmentResponse.setVersions(null);
-            } else {
-                attachmentResponse = attachmentService.deleteVersion(Long.parseLong(attachmentId),
-                                                                     Integer.parseInt(versionId));
-            }
-        }
-        return Response.ok(gson.toJson(attachmentResponse)).build();
+        return Response.ok(gson.toJson(attachmentService.deleteVersion(
+                Long.parseLong(attachmentId), Integer.parseInt(versionId)))).build();
     }
 }

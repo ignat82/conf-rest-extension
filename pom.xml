@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.homecredit</groupId>
     <artifactId>confrestextension</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <organization>
         <name>Home Credit Bank</name>
         <url>http://www.homecredit.ru/</url>
